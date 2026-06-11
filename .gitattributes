@@ -1,0 +1,15 @@
+# LF in repo and working tree — line-ending safety independent of local git config
+* text=auto eol=lf
+
+# Windows scripts genuinely need CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Binaries — never normalize
+*.png binary
+*.jpg binary
+*.ico binary
+*.ttf binary
+*.docx binary
+*.ncu-rep binary
