@@ -1,0 +1,21 @@
+# Python virtual environments — recreated via `uv sync`, never commit
+workshop-env/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Node
+node_modules/
+
+# Local git sandbox & scratch files (kit-root experiments, not project content)
+_gittest/
+_t1
+_t2
+.write_test
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtual environments (recreated via `uv sync` — never commit)
+.venv/
+venv/
+workshop-env/
+
+# uv
+# uv.lock IS committed (reproducible installs). Do not ignore it.
+
+# Profiler reports — large binaries; keep only curated samples under tests/fixtures/
+*.ncu-rep
+*.csv
+!tests/fixtures/**
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Sandbox scratch leftovers (safe to delete on Windows)
+_gittest/
+_t1
+_t2
+.write_test
