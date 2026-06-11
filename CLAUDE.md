@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 A development kit for building **MCP (Model Context Protocol) servers**. The main (and currently only real) project is **`perfdigest/`** — everything else at the root is supporting scratch space.
 
 - **`perfdigest/`** — a local MCP server that makes NVIDIA Nsight Compute (`ncu`) GPU profiler output token-efficient for LLM coding agents. It reads profiler reports from disk and returns small, structured, numeric digests instead of letting raw multi-thousand-token tables flood the agent's context. This is the project all real work happens in.
-- **`workshop/`** — a Node scratchpad with `@anthropic-ai/claude-agent-sdk`, `@anthropic-ai/sdk`, `tsx`, and `typescript` as dependencies. No source files yet.
+- **`MCP_Developing_Workshop/`** — a Node scratchpad (npm package `mcp_developing_workshop`) with `@anthropic-ai/claude-agent-sdk`, `@anthropic-ai/sdk`, `tsx`, and `typescript` as dependencies. No source files yet.
 - **`workshop-env/`** — a POSIX Python 3.10 venv (gitignored, never commit; not used by perfdigest, which targets Python 3.11+ via uv).
 
 ## Working in perfdigest — read these first, in this order
