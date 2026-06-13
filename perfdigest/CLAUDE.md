@@ -6,13 +6,22 @@ contract; the init prompt is the source of truth.
 
 ## What this project is
 
-A **local MCP server** that makes NVIDIA Nsight Compute (`ncu`) profiler output
+A **local, multi-backend MCP server** that makes performance-profiler output
 **token-efficient** for LLM coding agents. It reads a report from disk and returns a small,
-structured, numeric signal, keeping a `raw_ref` pointer for lazy expansion.
+structured, numeric signal, keeping a `raw_ref` pointer for lazy expansion. v1.0.0 backends:
+NVIDIA `ncu` (native + CSV), AMD `rocprof`, Linux `perf` (CPU C++/Rust), Apple Metal. Dispatch
+is a `format → Backend` registry (`core/backend.py`, `adapters/registry.py`); the `server/`
+shell never imports a concrete reader.
 
 We are a **translator/router, NOT a judge.** Provide clean numeric metrics deterministically;
 interpretation ("is this kernel memory-bound?") is the model's job. Do not build verdict/threshold
 heuristics.
+
+**Two operations (split in the prompt):** *digest* (read) is universal/ungated — a Mac digests a
+CI-produced NVIDIA report; *capture* (run a profiler) is platform-verified in `platform/`. Gating
+lives on the capture/advisor tier (`platform/capabilities.py`), never on readers. A new backend =
+a folder under `adapters/` with a reader + `mapping.py` + a `backend.py` that `register()`s a
+`Backend` (formats, suffixes, domain, platforms, default_core_set, probe, capture_command).
 
 ## Non-negotiable rules (violating any of these is a bug)
 
@@ -43,12 +52,12 @@ heuristics.
 5. **Convention** — `server/prompts.py` (usage convention/vocabulary) + `report_store/discovery.py`.
 6. Then **`csv_reader.py`** as a second reader on the same contract (extension-ready proof).
 
-Current state: **v1 implemented and validated.** All phases complete — contract, PRI
-reader, mapping (14 terms; default core set confirmed with the user), the 3-tool FastMCP
-server, prompts, and report discovery. 12 pytest tests pass (4 contract + 8 against a real
-`.ncu-rep`). End-to-end verified through Claude Code headless with Sonnet 4.6, and an A/B
-context-efficiency benchmark is in `eval/RESULTS.md`. The CSV fallback reader
-(`csv_reader.py`) is the one remaining stub — next extension point.
+Current state: **v1.0.0 — multi-backend.** The v1 NVIDIA path is refactored onto the registry;
+the `csv_reader.py` stub is now a real pure-Python reader (NVIDIA CSV digest with no GPU/PRI
+wheel). Added: AMD `rocprof`, Linux `perf` (CPU `cpu_function` units + CPU vocabulary), Metal
+(`gpu_pass`), the `platform/` capability layer, and the two capture-advisory tools. 58 pytest
+tests pass (+16 hardware-gated skips), CI runs the Linux/macOS/Windows matrix, Apache-2.0,
+PyPI + Claude Code/Codex configs ready. The original A/B benchmark is in `eval/RESULTS.md`.
 
 Real-report lesson (baked into `mapping.py`): the init prompt's example
 `dram__throughput.avg.pct_of_peak_sustained_elapsed` does **not** exist in ncu 2026.1 — the
@@ -56,13 +65,18 @@ DRAM %-of-peak is `gpu__dram_throughput...`. The absence convention caught it (s
 `not_available_in_this_export` instead of a fake 0.0). Always verify metric names against a
 real report before trusting a mapping entry.
 
-## The 3 tools (target signatures)
+## The tools (5 — registry-dispatched, thin shell)
 
+Tier 1 — digest (any backend, any host; `format` is mandatory):
 ```python
-list_kernels(report_ref: str, format: str) -> list[dict]   # [{name, index, duration_us}]
-get_metrics(report_ref: str, format: str, kernel: str,
-            metrics: list[str] | None = None) -> KernelDigest  # None => default core set
-expand(report_ref: str, format: str, kernel: str, section: str) -> dict
+list_kernels(report_ref, format) -> list[dict]   # [{name, index, duration_us, domain}]
+get_metrics(report_ref, format, kernel, metrics=None) -> dict   # None => backend default core set
+expand(report_ref, format, kernel, section) -> dict             # raw vendor metrics
+```
+Tier 2 — capture advisory (platform-verified):
+```python
+platform_capabilities() -> dict                  # can_digest (universal) vs can_capture_here (gated)
+suggest_profile_command(backend, target) -> dict # correct invocation, or a refusal that redirects
 ```
 
 ## Open items — ASK the user, do not invent silently
@@ -78,10 +92,10 @@ expand(report_ref: str, format: str, kernel: str, section: str) -> dict
   perfdigest.server.app:main`.
 
 ```bash
-uv sync                 # base server (CSV path works without CUDA)
-uv sync --extra cuda    # + ncu_report (NVIDIA PRI) for native .ncu-rep parsing
-uv run perfdigest       # run the MCP server over stdio
-uv run pytest           # tests (after fixtures land)
+uv sync --extra dev      # base + pytest; all pure-Python readers work with no GPU
+uv sync --extra nvidia   # + ncu_report (NVIDIA PRI) for native .ncu-rep (alias: --extra cuda)
+uv run perfdigest        # run the multi-backend MCP server over stdio
+uv run pytest            # 58 pass + 16 hardware-gated skips
 ```
 
 - **`ncu_report` is now on PyPI** as `ncu-report` (the init prompt §3 predates this and says

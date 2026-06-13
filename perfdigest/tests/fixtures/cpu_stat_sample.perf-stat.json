@@ -1,0 +1,9 @@
+{"counter-value":"120.50","unit":"msec","event":"task-clock"}
+{"counter-value":"3000000","event":"instructions"}
+{"counter-value":"1500000","event":"cycles"}
+{"counter-value":"200","event":"cache-misses"}
+{"counter-value":"2000","event":"cache-references"}
+{"counter-value":"50","event":"branch-misses"}
+{"counter-value":"5000","event":"branches"}
+{"counter-value":"30","event":"LLC-load-misses"}
+{"counter-value":"600","event":"LLC-loads"}

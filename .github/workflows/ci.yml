@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# The pure-Python readers (NVIDIA CSV, AMD rocprof CSV, Linux perf, Metal JSON)
+# parse committed text/JSON fixtures, so the full registry/platform/backend suite
+# runs on every OS with NO GPU and NO profiler installed. Real binary-capture
+# tests are fixture-gated and skip when their hardware report is absent.
+# The macOS job digesting the NVIDIA fixture IS the "CUDA-dev-on-a-Mac" proof.
+jobs:
+  test:
+    name: test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: perfdigest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+      - name: Sync (dev only — pure-Python readers cover the suite, no hardware)
+        run: uv sync --extra dev
+      - name: Run tests
+        run: uv run pytest -q

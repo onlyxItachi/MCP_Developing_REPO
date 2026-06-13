@@ -349,8 +349,6 @@ name = "ncu-report"
 version = "2026.2.0"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/30/78/89515aa751510b459a633da6175053d61162b78af22f2efa76ace474660c/ncu_report-2026.2.0-cp37-abi3-macosx_13_0_arm64.whl", hash = "sha256:89fd03e0efaff3d58d77b511dd4c03b0936dbcb5154e3761fd453c4fbb207dd6", size = 13040098, upload-time = "2026-06-01T13:54:11.618Z" },
-    { url = "https://files.pythonhosted.org/packages/c5/7e/d0126b7fbb42b36d3404c2330c1e09fa18e7b256a222969f2321a84acb9d/ncu_report-2026.2.0-cp37-abi3-macosx_13_0_x86_64.whl", hash = "sha256:73c737db34d7399dc3eed3fa874d68776d2d0a63584822b843540297c4d02993", size = 13599582, upload-time = "2026-06-01T13:54:14.13Z" },
     { url = "https://files.pythonhosted.org/packages/e3/1b/f57729dc9f848c6089b3b35eae3ec74c7e981f7fc4e26656b3a4a53a9f87/ncu_report-2026.2.0-cp37-abi3-manylinux_2_25_aarch64.whl", hash = "sha256:5b3167a324b56f8efcbf85c6fd3365ac482572a4bb37a76ef4f210f8142b26c9", size = 15320318, upload-time = "2026-06-01T13:54:16.631Z" },
     { url = "https://files.pythonhosted.org/packages/6f/a4/3b7a6cbba6918a272bf92ef3540d929055dd4529fe6cb157e6c8baa62140/ncu_report-2026.2.0-cp37-abi3-manylinux_2_25_x86_64.whl", hash = "sha256:579febf0e25eaed8f478d36daf0deaf557c1e377557933a051cf0d11cca02c55", size = 15786653, upload-time = "2026-06-01T13:54:19.301Z" },
     { url = "https://files.pythonhosted.org/packages/b8/02/f67d4a32f63229a59c4f71f75bfcbef9b3a8cc9d7c4e71f3161b4663e957/ncu_report-2026.2.0-cp37-abi3-win_amd64.whl", hash = "sha256:e8a630f33b4b9ba3c68e9acbaa0c8065d2af88409f724998624267beb00bc711", size = 12216148, upload-time = "2026-06-01T13:54:22.622Z" },
@@ -368,27 +366,35 @@ wheels = [
 
 [[package]]
 name = "perfdigest"
-version = "0.1.0"
+version = "1.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "mcp", extra = ["cli"] },
 ]
 
 [package.optional-dependencies]
+all = [
+    { name = "ncu-report", marker = "sys_platform != 'darwin'" },
+]
 cuda = [
-    { name = "ncu-report" },
+    { name = "ncu-report", marker = "sys_platform != 'darwin'" },
 ]
 dev = [
     { name = "pytest" },
+]
+nvidia = [
+    { name = "ncu-report", marker = "sys_platform != 'darwin'" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "mcp", extras = ["cli"], specifier = ">=1.2" },
-    { name = "ncu-report", marker = "extra == 'cuda'" },
+    { name = "ncu-report", marker = "sys_platform != 'darwin' and extra == 'all'" },
+    { name = "ncu-report", marker = "sys_platform != 'darwin' and extra == 'cuda'" },
+    { name = "ncu-report", marker = "sys_platform != 'darwin' and extra == 'nvidia'" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8" },
 ]
-provides-extras = ["cuda", "dev"]
+provides-extras = ["nvidia", "cuda", "amd", "cpu", "metal", "all", "dev"]
 
 [[package]]
 name = "pluggy"

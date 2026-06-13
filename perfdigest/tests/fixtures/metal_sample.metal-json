@@ -1,0 +1,15 @@
+{
+  "device": "Apple M5",
+  "passes": [
+    {
+      "name": "encoder:blit",
+      "duration_us": 300.0,
+      "metrics": {"ALU Utilization": 15.0, "Device Memory Utilization": 80.0, "L2 Hit Rate": 95.0}
+    },
+    {
+      "name": "encoder:matmul",
+      "duration_us": 2200.0,
+      "metrics": {"ALU Utilization": 82.0, "Device Memory Utilization": 30.0, "L2 Hit Rate": 78.0, "Occupancy": 70.0}
+    }
+  ]
+}
