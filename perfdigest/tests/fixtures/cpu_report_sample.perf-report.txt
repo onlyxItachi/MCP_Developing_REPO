@@ -1,0 +1,8 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+# Overhead       Samples  Command  Shared Object      Symbol
+# ........  ............  .......  .................  ............................
+#
+    62.50%          1250   app      app                [.] compute_heavy
+    25.00%           500   app      libm.so.6          [.] __ieee754_exp_fma
+    12.50%           250   app      app                [.] main

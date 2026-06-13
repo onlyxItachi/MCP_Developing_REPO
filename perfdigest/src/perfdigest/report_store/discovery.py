@@ -1,44 +1,52 @@
 """Report path resolution — avoid reading stale data from a cluttered dir.
 
 A debug directory accumulates reports over time; ``resolve_report`` turns the
-agent's reference (exact file, extensionless name, or a directory meaning
-"the newest report in here") into one concrete path or a clear error.
+agent's reference (exact file, extensionless name, or a directory meaning "the
+newest report in here") into one concrete path or a clear error. The set of
+report suffixes is no longer NVIDIA-specific — it comes from the resolved
+backend (``.ncu-rep``, ``.csv``, ``.perf-stat.json``, ``.json`` ...).
 """
 
 from __future__ import annotations
 
 from pathlib import Path
 
-REPORT_SUFFIX = ".ncu-rep"
+# Default kept for back-compat with v1 callers that pass no suffixes.
+DEFAULT_SUFFIXES: tuple[str, ...] = (".ncu-rep",)
 
 
-def resolve_report(report_ref: str) -> Path:
-    """Resolve a report reference to an existing .ncu-rep file.
+def resolve_report(
+    report_ref: str, suffixes: tuple[str, ...] = DEFAULT_SUFFIXES
+) -> Path:
+    """Resolve a report reference to an existing report file.
 
-    Accepts: a path to a report file, a path missing the ``.ncu-rep``
-    suffix, or a directory (resolves to the newest report inside it).
+    Accepts: a path to a report file, a path missing the backend's suffix, or a
+    directory (resolves to the newest matching report inside it).
     """
+    suffixes = tuple(suffixes) or DEFAULT_SUFFIXES
     p = Path(report_ref).expanduser()
 
     if p.is_dir():
-        candidates = sorted(
-            p.glob(f"*{REPORT_SUFFIX}"), key=lambda f: f.stat().st_mtime, reverse=True
-        )
+        candidates = [
+            f for suf in suffixes for f in p.glob(f"*{suf}")
+        ]
         if not candidates:
+            shown = " / ".join(suffixes)
             raise FileNotFoundError(
-                f"no {REPORT_SUFFIX} files in directory {p} — profile first with: "
-                "ncu --set full -o report.ncu-rep <app>"
+                f"no {shown} files in directory {p} — capture first "
+                "(see suggest_profile_command for the right invocation)."
             )
-        return candidates[0]
+        return max(candidates, key=lambda f: f.stat().st_mtime)
 
     if p.is_file():
         return p
 
-    with_suffix = p.with_name(p.name + REPORT_SUFFIX)
-    if with_suffix.is_file():
-        return with_suffix
+    for suf in suffixes:
+        with_suffix = p.with_name(p.name + suf)
+        if with_suffix.is_file():
+            return with_suffix
 
+    tried = ", ".join(str(p.with_name(p.name + s)) for s in suffixes)
     raise FileNotFoundError(
-        f"report not found: {report_ref} (also tried {with_suffix}). "
-        "Pass the path produced by: ncu --set full -o <file> <app>"
+        f"report not found: {report_ref} (also tried {tried})."
     )

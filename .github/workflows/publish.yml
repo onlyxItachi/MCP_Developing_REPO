@@ -1,0 +1,25 @@
+name: Publish to PyPI
+
+on:
+  push:
+    tags: ["v*"]
+
+# Trusted publishing (OIDC) — configure the project on PyPI to trust this repo's
+# `publish.yml`; no API token secret is stored. Tag a release like `v1.0.0`.
+jobs:
+  pypi:
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    defaults:
+      run:
+        working-directory: perfdigest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+      - name: Build sdist + wheel
+        run: uv build
+      - name: Publish
+        run: uv publish
